@@ -1,22 +1,23 @@
 import mcschematic
 
 def make_schematic(machinecode_filename, path, name, version):
-    lines = open(machinecode_filename).read().splitlines()
+    rom = open(machinecode_filename, 'rb').read()
 
-    # swap rega <-> regb, im too lazy to fix redstone wiring
+    lines = [bin(rom[i])[2:].rjust(8, '0')+bin(rom[i+1])[2:].rjust(8, '0') for i in range(0,len(rom),2)]
+    # for i in range(0,len(rom),2):
+    #     print(bin(rom[i])[2:].rjust(8, '0'),bin(rom[i])[2:].rjust(8, '0'))
+
+    # swap byte 1 <-> byte 2
     for i, line in enumerate(lines):
-        opcode = line[0:4]
-        if opcode in ['0010', '0011', '0100', '0101', '0110', '0111', '1000', '1001', '1010', '1101']:
-            pre = line[0:10]
-            rega = line[10:13]
-            regb = line[13:16]
-            lines[i] = pre + regb + rega
+        byte_1 = line[0:8]
+        byte_2 = line[8:16]
+        lines[i] = byte_2[::-1] + byte_1
 
     # fill to 64 lines
     noop = '0000000000000000'
     while (len(lines) < 64):
         lines.append(noop)
-    
+
     pos = [9, -15, 2]
 
     schem = mcschematic.MCSchematic()
@@ -82,10 +83,11 @@ def make_schematic(machinecode_filename, path, name, version):
             if bit == '1':
                 schem.setBlock(tuple(pright), on_block)
             pright[1] += 2
-        
+
         for bit in binary[8:16][::-1]:
             if bit == '1':
                 schem.setBlock(tuple(pleft), on_block)
             pleft[1] += 2
 
     schem.save(path, name, version)
+    print("\nSchematic saved to", f"{name}.schem")

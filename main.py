@@ -2,9 +2,16 @@ import mcschematic
 from assembler import assemble
 from simulator import simulate
 from schematic import make_schematic
+import argparse
+
+parser = argparse.ArgumentParser(
+    prog='Assembler'
+)
+parser.add_argument('filename')
+args = parser.parse_args()
 
 # for schematic
-path = 'C:/Users/12483/AppData/Roaming/.minecraft/config/worldedit/schematics'
+path = '/mnt/c/Users/Jasper/AppData/Roaming/com.modrinth.theseus/profiles/mooi/config/worldedit/schematics'
 name = 'program'
 version = mcschematic.Version.JE_1_18_2
 
@@ -20,9 +27,8 @@ def assemble_and_simulate(assembly_filename):
     simulate(machine_code_layer)
 
 def main():
-    program = 'fib'
-    
-    assemble_to_schematic(f'programs/{program}.as')
+    program = args.filename
+    assemble_to_schematic(program)
     # assemble_and_simulate(f'programs/{program}.as')
 
 if __name__ == "__main__":
