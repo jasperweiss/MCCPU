@@ -1,26 +1,24 @@
 import mcschematic
 
+
 def make_schematic(machinecode_filename, path, name, version):
-    rom = open(machinecode_filename, 'rb').read()
+    rom = open(machinecode_filename, "rb").read()
 
-    lines = [bin(rom[i])[2:].rjust(8, '0')+bin(rom[i+1])[2:].rjust(8, '0') for i in range(0,len(rom),2)]
-    # for i in range(0,len(rom),2):
-    #     print(bin(rom[i])[2:].rjust(8, '0'),bin(rom[i])[2:].rjust(8, '0'))
-
-    # swap byte 1 <-> byte 2
-    for i, line in enumerate(lines):
-        byte_1 = line[0:8]
-        byte_2 = line[8:16]
-        lines[i] = byte_2[::-1] + byte_1
-
-    # fill to 64 lines
-    noop = '0000000000000000'
-    while (len(lines) < 64):
-        lines.append(noop)
-
-    pos = [9, -15, 2]
+    # pos = [9, -15, 2]
+    start = [4, -14, 2]
 
     schem = mcschematic.MCSchematic()
+    on_block = "minecraft:barrel{Items:[{Slot:0,id:redstone,Count:1}]}"
+
+    pos = start
+    index = 0
+    for x in range(8):
+        if (rom[index] >> x) & 1:
+            schem.setBlock(tuple(pos), on_block)
+        pos[1] += 2
+
+    schem.save(path, name, version)
+    print("\nSchematic saved to", f"{name}.schem")
 
     # generate bottom bit locations for the right side
     right_side = []
@@ -70,22 +68,21 @@ def make_schematic(machinecode_filename, path, name, version):
         pos[2] += 2
         pos[0] += 8
 
-
     # generated bottom bit locations for left side (flip z values of right side)
     left_side = []
     for bottom_bit in right_side:
         left_side.append([bottom_bit[0], bottom_bit[1], -bottom_bit[2]])
 
     # place barrels
-    on_block = 'minecraft:barrel{Items:[{Slot:0,id:redstone,Count:1}]}'
+    on_block = "minecraft:barrel{Items:[{Slot:0,id:redstone,Count:1}]}"
     for pleft, pright, binary in zip(left_side, right_side, lines):
         for bit in binary[0:8]:
-            if bit == '1':
+            if bit == "1":
                 schem.setBlock(tuple(pright), on_block)
             pright[1] += 2
 
         for bit in binary[8:16][::-1]:
-            if bit == '1':
+            if bit == "1":
                 schem.setBlock(tuple(pleft), on_block)
             pleft[1] += 2
 
